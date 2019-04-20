@@ -1,7 +1,7 @@
 // Graph.c 
 // Part 1 of assignment 2
 // implement all of the functions in Graph.h
-// Sarah Williams and Jing Fan
+// Sarah Williams and Jing Jing Fan
 
 // use of adjacency list representation 
 
@@ -18,107 +18,152 @@
 // Put in the rep of a graph (node is already in graph.h ??)
 typedef struct GraphRep {
     AdjList *edges;
-    Adjlist *inedges;
+    AdjList *inedges;
     int nV;
     int nE;  
 } GraphRep;
 
-// dont know if we need ?? for inIncident and outIncident
 
-typedef struct adjListRep{
-    AdjList first;
-    AdjList last; // maybe dont need
-    AdjList curr; 
-} adjListRep;
-
-
-// need to add in static functions relating to linked list
+// need to add in static functions relating to the adjancency list
 // these functions are modified from the week 4 lecture exercises 
+
+// make a new node
+static AdjList makeNode (Vertex n, int weight);
 // inLL
 static bool inAL(AdjList aList, Vertex vert);
-// insertLL
-static AdjList insertAL(AdjList L, Vertex vert);
-// deleteLL
-static AdjList deleteAL(AdjList L, Vertex vert);
-// freeLL
-static void freeAL(AdjList L);
 // showAL
 static void showAL(AdjList L);
 // maybe make a valid checker for edges
+static bool validV(Graph g, Vertex V);
 
-// make an adjlist
-static AdjList newAdjList(void);
-
-
+//correct
 // create a new graph
 Graph newGraph(int noNodes)
 {
 
     assert(noNodes >= 0);
-    int counter = 0;
+    int i;
     
     Graph new_graph = malloc(sizeof(GraphRep));
-    assert(new_graph != NULL);
+    //assert(new_graph != NULL);
     new_graph->nV = noNodes;
     new_graph->nE = 0;
     
     // allocate memory for the array of lists
-    new_graph->edges = malloc(sizeof (AdjList)); // this may need to change 
-    for(counter = 0; counter < noNodes; counter++)
-        new_graph->edges[counter] = NULL;
+    new_graph->edges = malloc(noNodes * sizeof(AdjList)); 
+    //assert(new_graph->edges != NULL);    
+    new_graph->inedges = malloc(noNodes * sizeof(AdjList));
+    for(i = 0; i < noNodes; i++){
+        new_graph->edges[i] = NULL;
+        new_graph->inedges[i] = NULL;
+    }
         
     return new_graph; 
 }
-  
+
+//correct  
 void insertEdge(Graph g, Vertex src, Vertex dest, int weight){
+
+    assert(g != NULL && validV(g, src) && validV(g, dest));
     
     if(!inAL(g->edges[src], dest)){
-        g->edges[src] = insertAL(g->edges[src], dest); // one way?
-        g->edges[src]->weight = weight;
-        g->nE++;
-    }
-       
-}
+        AdjList newOut = makeNode(dest, weight);
+        newOut->next = g->edges[src];
+        g->edges[src] = newOut;
 
+    }
+    
+    if(!inAL(g->inedges[dest], src)){
+        AdjList newIn = makeNode(src, weight);
+        newIn->next = g->inedges[dest];
+        g->inedges[dest] = newIn;
+
+    }
+
+    g->nE++;       
+}
+//correct
 void removeEdge(Graph g, Vertex src, Vertex dest){
 
-    if(inAL(g->edges[src], dest)) {
-        g->edges[src] = deleteAL(g->edges[src], dest);
-        g->nE--;
-    }
-}
-
-bool adjacent(Graph g, Vertex src, Vertex dest){
-    assert(g!= NULL);
+    assert(g != NULL && validV(g, src) && validV(g, dest)); 
     
-    return inAL(g->edges[src], dest);
+    if(inAL(g->edges[src], dest)) {
+        AdjList curr = g->edges[src]->next;
+        AdjList prev = g->edges[src];
+        if (curr == NULL) {
+            free(prev);
+            g->edges[src] = NULL;
+        } else if 
+        while (curr != NULL) {
+            if (dest == curr->w) {
+                prev->next = curr->next;
+                free(curr);
+                break;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+    
+    if(inAL(g->inedges[dest], src)){
+        AdjList curr = g->inedges[dest]->next;
+        AdjList prev = g->inedges[dest];
+        if (curr == NULL) {
+            free(prev);
+            g->inedges[dest] = NULL;
+        }
+        while (curr != NULL) {
+            if (src == curr->w) {
+                prev->next = curr->next;
+                free(curr);
+                break;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+    g->nE--;
 }
 
-// too simple??? nsh its fine
+//correct
+//checks if dest and src are adj to each other
+bool adjacent(Graph g, Vertex src, Vertex dest){
+
+    assert(g!= NULL && validV(g, src) && validV(g, dest));
+    
+    return (inAL(g->edges[src], dest));
+}
+
+
+//correct
 int  numVerticies(Graph g){
+    
+    assert(g != NULL);
     
     return g->nV;
 
 }
 
+//correct
 //  Returns a list of adjacent vertices
 // on outgoing edges from a given vertex
 AdjList outIncident(Graph g, Vertex v){
-    assert(g != NULL);
-    
-   // AdjList outEdges = newAdjList();// need to set up a function that creates a new list
    
-    return g->edges[v];
+    assert(g != NULL && validV(g, v));
+    
+    return (g->edges[v]);
+      
 }
 
+//correct
 // Returns a list of adjacent vertices
 // on incoming edges from a given vertex.
 
 AdjList inIncident(Graph g, Vertex v){
-
-    assert(g != NULL);
     
-     return g->inedges[v];
+    assert(g != NULL && validV(g, v));
+    
+    return (g->inedges[v]);
 }
 
 // displays the graph (any implementation)
@@ -138,53 +183,63 @@ void  showGraph(Graph g){
 void  freeGraph(Graph g){
 
     assert(g != NULL);
-    int counter;
-    
-    for (counter = 0; counter < g->nV; counter++)
-        freeAL(g->edges[counter]); // add in aux function
+    int counter = 0;
+    AdjList curr = g->edges[counter]->next;
+    AdjList prev = g->edges[counter];
+    while (counter < g->nV) {
+        while (curr != NULL) {
+            AdjList temp = prev;
+            prev = curr;
+            curr = curr->next;
+            free(temp);        
+        }
+        counter++;    
+    }
         
+    free(g->edges);
+    free(g->inedges);   
     free(g);
         
 }
 
 // Auxillary Functions - 
 
+//correct
+static bool validV(Graph g, Vertex v){
+    return(g != NULL && v >= 0 && (v < g->nV));
+}
+
+//correct
+// function to make new nodes
+static AdjList makeNode (Vertex n, int weight) { 
+
+    AdjList new = malloc(sizeof(adjListNode)); 
+    assert(new != NULL);
+    new->w = n;
+    new->weight = weight;
+    new->next = NULL;
+    return new;
+}
+
+
 
 // private function that check if an edge is already in the graph
 static bool inAL(AdjList aList, Vertex vert) {
+
+    AdjList curr = aList;
+    int inAL = false;
+
+    while (curr != NULL) {
+        if (vert == curr->w) {
+            inAL = true;
+            break;
+        }
+        curr = curr->next;
+    }
     
-    if(aList == NULL) 
-        return false;
-    if (aList->w == vert) 
-        return true;
-        
-    
-    return inAL(aList->next, vert);
+    return inAL;
 }
 
-// need to do something with weights??
-// probably change this 
-static AdjList insertAL(AdjList L, Vertex vert) {
-
-    adjListNode *new = malloc(sizeof(adjListNode));
-    new->w = vert;
-    new->next = L;
-    
-    return new;
-   
-}
-
-static AdjList deleteAL(AdjList L, Vertex vert) {
-
-    if(L == NULL) 
-        return L;
-    if(L->w == vert) 
-        return L->next;
-    
-    L->next = deleteAL(L->next, vert);
-    return L;
-
-}
 
 static void showAL(AdjList L) {
     if(L == NULL) 
@@ -193,21 +248,5 @@ static void showAL(AdjList L) {
         printf("%d, ", L->w);
         showAL(L->next);
     }
-}
-
-static void freeAL(AdjList L) {
-    if(L != NULL) {
-        freeAL(L->next);
-        free(L);
-    }  
-}
-
-
-static AdjList newAdjList (void) {
-
-    adjListRep *new = malloc(sizeof(*new));
-    *new = (adjListRep) { };
-    return new;
-
 }
 
