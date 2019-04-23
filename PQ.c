@@ -12,7 +12,7 @@
 // rough ideas for PQ
 
 typedef struct PQNode {
-    ItemPQ node; // maybe change this variable to item, might make more sense 
+    ItemPQ node;  
     struct PQNode *next;
 } PQNode;
 
@@ -54,22 +54,27 @@ void addPQ(PQ pq, ItemPQ element) {
 	new->node.key = element.key;
 	new->node.value = element.value;
 	new->next = NULL;
+	int added = FALSE;
 		
 	if (pq->head == NULL) {
 	    pq->head = new;
 	    pq->tail = new;
+	    added = TRUE;
+	    return;
 	} else {
-	    PQNode *head_hold = pq->head; // easier holder for the head value
+	   // PQNode *head_hold = pq->head; // easier holder for the head value
 	    PQNode *curr = pq->head;
 	    PQNode *curr_next = pq->head->next;
-	   // PQNode *tail_hold = pq->tail;
-	    int added = FALSE;
+	    //PQNode *tail_hold = pq->tail;
+	    added = FALSE;
 	    while (curr != NULL && added == FALSE) {
 	        // case: same key, so just need to update the value
 	        if(curr->node.key == new->node.key) {
 	            curr->node.value = new->node.value;
 	            added = TRUE;
-	        } else if(head_hold->node.key < new->node.key) { // case: higher priority than the head
+	        } 
+	        
+	        /* else if(head_hold->node.key < new->node.key) { // case: higher priority than the head
 	            new->next = head_hold;
 	            pq->head = new;
 	            added = TRUE;
@@ -82,12 +87,17 @@ void addPQ(PQ pq, ItemPQ element) {
 	            new->next = NULL;
 	            pq->tail = new;
 	            added = TRUE;
-	        }      
+	        } */     
 	        curr = curr->next;
 	        curr_next = curr_next->next;  // this will eventuall point to null so maybe change
 	                                        // looping conditions 
 	    }
+	    if(curr == pq->tail && added == FALSE){
+	        pq->tail->next = new;
+	        pq->tail = new;
+	   }
 	}
+	
 
 }
 
@@ -123,7 +133,7 @@ ItemPQ dequeuePQ(PQ pq) {
                 old = pq->head;  
                 pq->head = curr;
                 smallest_v = curr_prev->node.value;
-            } else if(curr->node.value < smallest_v) {
+            } else if(curr->node.value < smallest_v && curr_prev != pq->head) {
 	            throwAway = curr->node;
 	            old = curr;
 	            smallest_v = curr->node.value;
@@ -165,7 +175,7 @@ void  showPQ(PQ pq) {
     
     PQNode *curr;
     for(curr = pq->head; curr != NULL; curr = curr->next){
-        printf("{%d, %d}", curr->node.key, curr->node.value);
+        printf("{%d,%d}", curr->node.key, curr->node.value);
         if(curr->next != NULL) {
             printf(" - ");
         }
