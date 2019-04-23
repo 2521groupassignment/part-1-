@@ -90,10 +90,10 @@ void removeEdge(Graph g, Vertex src, Vertex dest){
     if(inAL(g->edges[src], dest)) {
         AdjList curr = g->edges[src]->next;
         AdjList prev = g->edges[src];
-        if (curr == NULL) {
+        if (prev->w == dest) {
             free(prev);
-            g->edges[src] = NULL;
-        } else if 
+            g->edges[src] = curr;
+        }
         while (curr != NULL) {
             if (dest == curr->w) {
                 prev->next = curr->next;
@@ -106,20 +106,20 @@ void removeEdge(Graph g, Vertex src, Vertex dest){
     }
     
     if(inAL(g->inedges[dest], src)){
-        AdjList curr = g->inedges[dest]->next;
-        AdjList prev = g->inedges[dest];
-        if (curr == NULL) {
-            free(prev);
-            g->inedges[dest] = NULL;
+        AdjList curr1 = g->inedges[dest]->next;
+        AdjList prev1 = g->inedges[dest];
+        if (prev1->w == src) {
+            free(prev1);
+            g->inedges[dest] = curr1;
         }
-        while (curr != NULL) {
-            if (src == curr->w) {
-                prev->next = curr->next;
-                free(curr);
+        while (curr1 != NULL) {
+            if (src == curr1->w) {
+                prev1->next = curr1->next;
+                free(curr1);
                 break;
             }
-            prev = curr;
-            curr = curr->next;
+            prev1 = curr1;
+            curr1 = curr1->next;
         }
     }
     g->nE--;
