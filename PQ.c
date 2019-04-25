@@ -55,17 +55,17 @@ void addPQ(PQ pq, ItemPQ element) {
 	new->node.value = element.value;
 	new->next = NULL;
 	int added = FALSE;
-		
+	
+	//adding to empty PQ	
 	if (pq->head == NULL) {
 	    pq->head = new;
 	    pq->tail = new;
 	    added = TRUE;
 	    return;
 	} else {
-	   // PQNode *head_hold = pq->head; // easier holder for the head value
+	    PQNode *head_hold = pq->head; 
 	    PQNode *curr = pq->head;
 	    PQNode *curr_next = pq->head->next;
-	    //PQNode *tail_hold = pq->tail;
 	    added = FALSE;
 	    while (curr != NULL && added == FALSE) {
 	        // case: same key, so just need to update the value
@@ -74,22 +74,21 @@ void addPQ(PQ pq, ItemPQ element) {
 	            added = TRUE;
 	        } 
 	        
-	        /* else if(head_hold->node.key < new->node.key) { // case: higher priority than the head
+	        else if(head_hold->node.key < new->node.key) { // case: higher priority than the head
 	            new->next = head_hold;
 	            pq->head = new;
 	            added = TRUE;
 	        } else if (curr_next->node.key < new->node.key) { // case: insert somewhere in the middle
 	            curr->next = new;
-	            new->next = curr_next; // add more ??
+	            new->next = curr_next;
 	            added = TRUE;
 	        } else if( curr == pq->tail && curr->node.key > new->node.key) { // case: insert at tail
 	            curr->next = new;
 	            new->next = NULL;
 	            pq->tail = new;
 	            added = TRUE;
-	        } */     
+	        }   
 	        curr = curr->next;
-	        curr_next = curr_next->next;  // this will eventuall point to null so maybe change
 	                                        // looping conditions 
 	    }
 	    if(curr == pq->tail && added == FALSE){
@@ -103,55 +102,70 @@ void addPQ(PQ pq, ItemPQ element) {
 
 ItemPQ dequeuePQ(PQ pq) {
 
-    assert(pq != NULL);
-    assert(PQEmpty(pq) != 1);
+    assert (pq != NULL);
+    assert (PQEmpty(pq) != 1);
 
-	ItemPQ throwAway = {0};
-	throwAway = pq->head->node; // maybe change node name to element (better use in struct)
-	PQNode *old = pq->head;
-	// going to run through the queue, to update the above value, until we
-	// find the correct node to dequeue, node needs to have the smallest value, 
-	// and stick to FIFO order
-	if(pq->head == pq->tail) {
+    //if only one node in queue
+    
+    //if more than one node in queue
+        //while loop to find smallest value and key
+        
+    //outside while loop store node to remove in a temp
+    //removal when head
+    //removal when tail
+    //removal when middle
+    PQNode *itemFound = malloc(sizeof(PQNode));
+    itemFound->node.value = 0;
+    itemFound->node.key = 0;
+    
+    ItemPQ itemFoundNode;
+    itemFoundNode.value = 8;                        // used these values to test in output
+    itemFoundNode.key = 8;                          // 
+    
+    if(pq->head != NULL && pq->head == pq->tail) {
+        itemFoundNode.value = pq->head->node.value;    
+        itemFoundNode.key = pq->head->node.key;         
+	    free(pq->head);
 	    pq->head = pq->tail = NULL;
-	    return throwAway;
+	    return itemFoundNode;
     } else {
-	
-	    // storage variables to keep track of the smallest value and
-	    // its key
-	    int smallest_v = INF;
-	    //int key_index = INF; // might node use this variable 
-	    
-	    PQNode *curr_prev = pq->head; 
-	    PQNode *curr = pq->head->next;
-	    PQNode *curr_next = pq->head->next->next;  
-	    while (curr != NULL) {
-	    // first check the head of the queue
-	        if(curr_prev->node.value < smallest_v && curr_prev == pq->head) {
-	        // the values of throwAway and old stay the same
-	            throwAway = pq->head->node; 
-                old = pq->head;  
-                pq->head = curr;
-                smallest_v = curr_prev->node.value;
-            } else if(curr->node.value < smallest_v && curr_prev != pq->head) {
-	            throwAway = curr->node;
-	            old = curr;
-	            smallest_v = curr->node.value;
-	            if(curr == pq->tail) {
-	               curr_prev->next = NULL;
-	               pq->tail = curr_prev;
-	             } else {
-	                curr_prev->next = curr_next; 
-	            }
-	        }
-	        curr = curr->next;
-	        curr_prev = curr_prev->next;
-	        curr_next = curr_next->next;
-	    }
-	}
-	free(old);   
-	return throwAway;
+        int smallest_v = INF;
+	    PQNode *curr = pq->head;
+	    PQNode *prev = pq->head;
+	    PQNode *itemFound_prev = NULL;
+        while (curr != NULL) {
+            if (curr->node.value < smallest_v) {
+                itemFound = curr;
+                itemFound_prev = prev;
+                smallest_v = curr->node.value;          
+                
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+        itemFoundNode.value = itemFound->node.value;
+        itemFoundNode.key = itemFound->node.key;
+        
+        //itemFound is head
+        if (itemFound == pq->head) {
+            pq->head = pq->head->next;
+            free(itemFound);
+        //item found is tail
+        } else if (itemFound == pq->tail) {
+            pq->tail = itemFound_prev;
+            pq->tail->next = NULL;
+            free(itemFound); 
+        //item in middle
+        } else {
+            PQNode *temp = itemFound;
+            itemFound_prev->next = itemFound->next;
+            free(temp);
+       }          
+    }      
+    return itemFoundNode;
+
 }
+
 
 void updatePQ(PQ pq, ItemPQ element) {
     
@@ -197,3 +211,4 @@ void  freePQ(PQ pq) {
     free(pq);
 
 }
+
