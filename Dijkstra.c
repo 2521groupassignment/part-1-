@@ -1,165 +1,265 @@
-// Dijkstra ADT interface for Ass2 (COMP2521)
-#include "Dijkstra.h"
-#include "PQ.h"
-#include <stdlib.h>
+// Graph.c 
+// Part 1 of assignment 2
+// implement all of the functions in Graph.h
+// Sarah Williams and Jing Jing Fan
+
+// use of adjacency list representation 
+
 #include <assert.h>
+#include <err.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sysexits.h>
+
+#include "Graph.h"
+
+typedef struct GraphRep {
+    AdjList *edges;
+    AdjList *inedges;
+    int nV;
+    int nE;  
+} GraphRep;
 
 
-// define a very big number to set all initial dist to
-#define INF 0x7FFFFFFF
+// Auxillary functions:
 
-// auxillary function
-static void add_pred(ShortestPaths *path, Vertex w, Vertex v);
+// makeNode
+static AdjList makeNode (Vertex n, int weight);
+// inAl
+static bool inAL(AdjList aList, Vertex vert);
+// showAL
+static void showAL(AdjList L);
+// maybe make a valid checker for edges
+static bool validV(Graph g, Vertex V);
 
-ShortestPaths dijkstra(Graph g, Vertex v) {
+
+// create a new graph
+Graph newGraph(int noNodes)
+{
+
+    assert(noNodes >= 0);
+    int i;
+    
+    Graph newGraph = malloc(sizeof(GraphRep));
+    assert(newGraph != NULL);
+    newGraph->nV = noNodes;
+    newGraph->nE = 0;
+    
+    // allocate memory for the array of lists
+    
+    newGraph->edges = malloc(noNodes * sizeof(AdjList)); 
+    newGraph->inedges = malloc(noNodes * sizeof(AdjList));
+    
+    // initialise the values in the lists
+    for(i = 0; i < noNodes; i++){
+        newGraph->edges[i] = NULL;
+        newGraph->inedges[i] = NULL;
+    }
+        
+    return newGraph; 
+}
+
+//insert an edge from src to dest in graph, g 
+void insertEdge(Graph g, Vertex src, Vertex dest, int weight){
+
+    assert(g != NULL && validV(g, src) && validV(g, dest));
+    
+    // checks the edge is not in the list, then add the edge
+    // to both the edges and inedges lists
+    
+    if(!inAL(g->edges[src], dest)){
+        AdjList newOut = makeNode(dest, weight);
+        newOut->next = g->edges[src];
+        g->edges[src] = newOut;
+
+    }
+    
+    if(!inAL(g->inedges[dest], src)){
+        AdjList newIn = makeNode(src, weight);
+        newIn->next = g->inedges[dest];
+        g->inedges[dest] = newIn;
+
+    }
+
+    g->nE++;       
+}
+
+//remove the edge from src to dest in graph, g
+void removeEdge(Graph g, Vertex src, Vertex dest){
+
+    assert(g != NULL && validV(g, src) && validV(g, dest)); 
+    
+    // checks that an edge exists between the src and dest nodes
+    // if an edge exists, remove it from both the edges and inedges lists
+    
+    if(inAL(g->edges[src], dest)) {
+        AdjList curr = g->edges[src]->next;
+        AdjList prev = g->edges[src];
+        if (prev->w == dest) {
+            free(prev);
+            g->edges[src] = curr;
+        }
+        while (curr != NULL) {
+            if (dest == curr->w) {
+                prev->next = curr->next;
+                free(curr);
+                break;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+    
+    if(inAL(g->inedges[dest], src)){
+        AdjList curr1 = g->inedges[dest]->next;
+        AdjList prev1 = g->inedges[dest];
+        if (prev1->w == src) {
+            free(prev1);
+            g->inedges[dest] = curr1;
+        }
+        while (curr1 != NULL) {
+            if (src == curr1->w) {
+                prev1->next = curr1->next;
+                free(curr1);
+                break;
+            }
+            prev1 = curr1;
+            curr1 = curr1->next;
+        }
+    }
+    g->nE--;
+}
+
+
+//checks if dest and src are adj to each other
+bool adjacent(Graph g, Vertex src, Vertex dest){
+
+    assert(g!= NULL && validV(g, src) && validV(g, dest));
+    
+    return (inAL(g->edges[src], dest));
+}
+
+
+//returns the number of vertices in graph, g
+int  numVerticies(Graph g){
     
     assert(g != NULL);
-    // set up the struct for the shortest path and initialise the variables
-    // we know so far
-    ShortestPaths *short_p = malloc(sizeof(ShortestPaths));
-    short_p->src = v;
-    short_p->noNodes = numVerticies(g);   
-    // initialise the distance array
-    short_p->dist = malloc(numVerticies(g) * sizeof(int));
-    assert(short_p->dist != NULL);
-    // initialise the predecessor array
-    short_p->pred = malloc(numVerticies(g) * sizeof(PredNode *));
-    assert(short_p->pred != NULL);
     
-    
-    // initialise an array to hold the nodes that have been visited in the graph
-    int *seen_set = malloc(sizeof(int)*numVerticies(g));
-    
-    // assign the necessary values to the variables in the arrays
-    for( int i = 0; i < numVerticies(g); i++) {
-        // initial dist from src for all nodes in infinity
-        short_p->dist[i] = INF;
-        // the pred for each node is currently unknown, so set to NULL
-        short_p->pred[i] = NULL;
-        // every vertex is currently unseen
-        seen_set[i] = -1;
-    }
-    
-    // we already known the distance to the src is 0
-    short_p->dist[v] = 0;
-    
-    // set up a new priority queue which will aid in traversing graph g
-    PQ vertex_set = newPQ();
-    // create a new pqnode, type ItemPQ and set its values
-    ItemPQ new_pqnode;
-    new_pqnode.key = v;
-    new_pqnode.value = short_p->dist[v];
-    addPQ(vertex_set, new_pqnode);
-    
-    
-    // Implementation of Dijkstra's Algorithm
-    
-    // i.e. while the priority queue isn't empty
-    while(PQEmpty(vertex_set) != 1){
-        // dequeue the item with the smallest distance
-        ItemPQ curr_node = dequeuePQ(vertex_set);
-        // ensure the vertex has not been seen before
-        if(seen_set[curr_node.key] != -1) continue;
-        
-        // then change the unseen vertex to the seen set, by changing
-        // its value in the array to 1 (this could be any value)
-        seen_set[curr_node.key] = 2;
-        //printf("NODE %d\n", curr_node.key);
-        // get all the neighbours of the current node
-        AdjList neighbours = outIncident(g, curr_node.key);
-        // check all of the neighbours to the vertex, for the shortest distance
-        // as neighbours is a linked list, we are simply performing a linked
-        // list traversal 
-        while(neighbours != NULL) {
-            // need to deal with the cases of distance less than and distance 
-            // equal to
-            // i.e. if the distance so far to the curr node plus the weight to the neighbour
-            // if less than the weight previously set to this neighbouring node
-            // update the distance
-            if((short_p->dist[curr_node.key] + neighbours->weight) < short_p->dist[neighbours->w]){
-                // update the distance array
-                short_p->dist[neighbours->w] = (short_p->dist[curr_node.key] + neighbours->weight);
-                // update the pred list
-                // maybe make this it's own function
-                short_p->pred[neighbours->w] = malloc(sizeof(PredNode));
-                short_p->pred[neighbours->w]->v = curr_node.key;
-                short_p->pred[neighbours->w]->next = NULL;
-                
-                new_pqnode.key = neighbours->w;
-                new_pqnode.value = short_p->dist[curr_node.key] + neighbours->weight;
-                addPQ(vertex_set, new_pqnode);
+    return g->nV;
 
-            } else if((short_p->dist[curr_node.key] + neighbours->weight) == short_p->dist[neighbours->w]){
-                // update the distance array
-                short_p->dist[neighbours->w] = (short_p->dist[curr_node.key] + neighbours->weight);
-                // update the pred list
-                add_pred(short_p, neighbours->w, curr_node.key);
-                
-                new_pqnode.key = neighbours->w;
-                new_pqnode.value = short_p->dist[curr_node.key] + neighbours->weight;
-                addPQ(vertex_set, new_pqnode);
-
-            }
-            neighbours = neighbours->next;
-        }
-                
-    }
-                
-    // case: distances to some nodes are still set to inf
-    // need to make them equal to 0
-    int k;
-    for(k = 0; k < numVerticies(g); k++){
-        if(short_p->dist[k] == INF) {
-        short_p->dist[k] = 0;
-        }
-    }
-
-    //free(vertex_set);
-
-    return *short_p;
 }
-            
-void showShortestPaths(ShortestPaths paths) {
 
-    int i = paths.src;
-    //int i;
-    for(i = 0; i < paths.noNodes; i++){
-        printf("%d", paths.dist[i]);
+
+//  Returns a list of adjacent vertices
+// on outgoing edges from a given vertex
+AdjList outIncident(Graph g, Vertex v){
+   
+    assert(g != NULL && validV(g, v));
+    
+    return (g->edges[v]);
+      
+}
+
+
+// Returns a list of adjacent vertices
+// on incoming edges from a given vertex.
+
+AdjList inIncident(Graph g, Vertex v){
+    
+    assert(g != NULL && validV(g, v));
+    
+    return (g->inedges[v]);
+}
+
+// displays the graph 
+void  showGraph(Graph g){
+
+    assert(g != NULL);
+    int i;
+    
+    printf("Number of verticies: %d\n", g->nV);
+    printf("Number of edges: %d\n", g->nE);
+    
+    for(i = 0; i < g->nV; i++){
+        printf("[%d] - ", i);
+        showAL(g->edges[i]);
     }
-    printf("\n");
+        
+}
 
-    // print the pred list
+// frees all the memory associated with the graph
+void  freeGraph(Graph g){
 
-    PredNode *curr = paths.pred[paths.src];
-    while(curr != NULL){
-        printf("%d, ", curr->v);
+    assert(g != NULL);
+    int i = 0;
+    AdjList curr = g->edges[i]->next;
+    AdjList prev = g->edges[i];
+    while (i < g->nV) {
+        while (curr != NULL) {
+            AdjList temp = prev;
+            prev = curr;
+            curr = curr->next;
+            free(temp);        
+        }
+        i++;    
+    }
+        
+    free(g->edges);
+    free(g->inedges);   
+    free(g);
+        
+}
+
+// Auxillary Functions - 
+
+// returns whether a vertex is valid
+// conditions: vertex's value needs to be greater than
+// zero and less than the total number of vertices in the graph
+static bool validV(Graph g, Vertex v){
+    return(g != NULL && v >= 0 && (v < g->nV));
+}
+
+
+// function to make new nodes
+static AdjList makeNode (Vertex n, int weight) { 
+
+    AdjList new = malloc(sizeof(adjListNode)); 
+    assert(new != NULL);
+    new->w = n;
+    new->weight = weight;
+    new->next = NULL;
+    return new;
+}
+
+
+
+// checks if a node is already in the edge list
+// i.e. if there is already an edge between two nodes
+static bool inAL(AdjList aList, Vertex vert) {
+
+    AdjList curr = aList;
+    int inAL = false;
+
+    while (curr != NULL) {
+        if (vert == curr->w) {
+            inAL = true;
+            break;
+        }
         curr = curr->next;
     }
-    printf("\n");
-
-
+    
+    return inAL;
 }
 
-
-void  freeShortestPaths(ShortestPaths paths) {
-
-    free(paths.pred);
-    free(paths.dist);
-}
-
-static void add_pred(ShortestPaths *path, Vertex w, Vertex v){
-
-PredNode *new = malloc(sizeof(PredNode));
-new->v = v;
-new->next = NULL;
-
-PredNode *curr = path->pred[w];
-
-while(path->pred[w]->next != NULL) {
-path->pred[w] = path->pred[w]->next;
-}
-path->pred[w]->next = new;
-path->pred[w] = curr;
-
+// displays the destination nodes from a given source vertex
+// used in the showGraph function
+static void showAL(AdjList L) {
+    if(L == NULL) 
+        printf("\n");
+    else {
+        printf("%d, ", L->w);
+        showAL(L->next);
+    }
 }
