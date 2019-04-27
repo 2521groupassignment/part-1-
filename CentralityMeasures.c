@@ -4,24 +4,91 @@
 #include "PQ.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "Graph.h"
 
+int countInAdjVs(Graph g, Vertex v) 
+{
+    double i = 0;
+    AdjList curr = inIncident(g, v);
+    while (curr != NULL) {
+        i++;
+        curr = curr->next;
+    }
+    //printf("hello %f\n", i);
+    
+    return i;
+
+}
+
+int countOutAdjVs(Graph g, Vertex v) {
+
+    double i = 0;
+    AdjList curr = outIncident(g, v);
+    while (curr != NULL) {
+        i++;
+        curr = curr->next;
+    }
+    
+    //printf("hello %d\n", i);
+    return i;
+
+}
 
 NodeValues outDegreeCentrality(Graph g){
-	NodeValues throwAway = {0};
-	return throwAway;
+	NodeValues GraphOutDegrees = {0};
+	int nV = numVerticies(g);
+   
+    GraphOutDegrees.noNodes = nV;
+    
+    GraphOutDegrees.values = calloc(nV, sizeof(double));
+    
+    Vertex v;
+    v = 0;
+    while (v < nV) {
+        GraphOutDegrees.values[v] = countOutAdjVs(g, v);
+        v++;
+    }
+    
+    return GraphOutDegrees;
 }
 NodeValues inDegreeCentrality(Graph g){
-	NodeValues throwAway = {0};
-	return throwAway;
+	NodeValues GraphInDegrees = {0};
+	int nV = numVerticies(g);
+   
+    GraphInDegrees.noNodes = nV;
+    GraphInDegrees.values = calloc(nV, sizeof(double));
+    
+    Vertex v;
+    v = 0;
+    while (v < nV) {
+        GraphInDegrees.values[v] = countInAdjVs(g, v);
+        v++;
+    }
+
+
+    return GraphInDegrees;
+
 }
 NodeValues degreeCentrality(Graph g) {
-	NodeValues throwAway = {0};
-	return throwAway;
+    NodeValues GraphDegrees = {0};
+   
+    /*int nV = numVerticies(g);
+    GraphDegrees.noNodes = nV;
+    GraphDegrees.values = calloc(nV, sizeof(double));
+    
+    Vertex v;
+    v = 0;
+    while (v < nV) {
+        GraphDegrees.values[v] = countOutAdjVs(g, v) + countInAdjVs(g, v);
+        v++;
+    }*/
+
+    return GraphDegrees;
+
 }
-// WORK ON THIS FUNCTION
+
 NodeValues closenessCentrality(Graph g){
-/
-    assert(g != NULL);
+    /*assert(g != NULL);
 	NodeValues *new = malloc(sizeof(NodeValues));
 	new->noNodes = numVerticies(g);
 	new->values = malloc(numVerticies(g) * sizeof(double));
@@ -47,12 +114,11 @@ NodeValues closenessCentrality(Graph g){
         new->values[v] = numerator / denominator;
     }
 	
-	return *new;
-	//NodeValues throwAway = {0};
-	//return throwAway;
+	return *new;*/
+	NodeValues throwAway = {0};
+	return throwAway;
+
 }
-
-
 
 NodeValues betweennessCentrality(Graph g){
 	NodeValues throwAway = {0};
@@ -65,9 +131,21 @@ NodeValues betweennessCentralityNormalised(Graph g){
 }
 
 void showNodeValues(NodeValues values){
+    if (values.values == NULL) {
+		printf("Invalid Values\n");
+		return;
+	}
+	Vertex v = 0;;
+	while (v < values.noNodes) {
+	    printf("%d: %f\n", v, values.values[v]);
+        v++;
+    }
 
 }
 
 void freeNodeValues(NodeValues values){
 
+    free(values.values);
+	values.noNodes = 0;
+	return;
 }
