@@ -1,5 +1,7 @@
-//kENNEDY
 // PQ ADT interface for Ass2 (COMP2521)
+// Part 2 of Assignment 2
+// Jing Jing Fan and Sarah Williams
+
 #include "PQ.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,8 +11,6 @@
 #define FALSE 0
 #define TRUE 1
 #define INF 0x7FFFFFFF
-
-// rough ideas for PQ
 
 typedef struct PQNode {
     ItemPQ node;  
@@ -45,12 +45,16 @@ int PQEmpty(PQ p) {
 	    
 }
 
+// Adds item (ItemPQ) to the priority queue.
+// If an item with 'key' exists, it's 'value' is updated.
+
 void addPQ(PQ pq, ItemPQ element) {
 
     assert (pq != NULL);
 
     PQNode *new = malloc (sizeof(PQNode *));
 	assert(new != NULL);
+	
 	// initialise the values in the new PQ node
 	new->node.key = element.key;
 	new->node.value = element.value;
@@ -59,19 +63,19 @@ void addPQ(PQ pq, ItemPQ element) {
 	
 	PQNode *curr = pq->head;
 	int changed = 0;
+	// case: item with the key exists, need to update its value
 	while (curr != NULL) {
 	
 	    if (curr->node.key == element.key) {
-	    
 	        curr->node.value = element.value;
-	        changed = 1;
-	        
+	        changed = 1;  
 	    }
 	    curr=curr->next;
 	}
 	
 	if (changed == 1) return;
 	
+	// if the key does not exist, add it to the head of the priority queue
 	if (pq->head == NULL) {
         pq->head = new;
         pq->tail = new;
@@ -80,75 +84,23 @@ void addPQ(PQ pq, ItemPQ element) {
         pq->head = new;
     }    
 
-	/*int added = FALSE;
-	
-	//adding to empty PQ	
-	if (pq->head == NULL) {
-	    pq->head = new;
-	    pq->tail = new;
-	    added = TRUE;
-	    return;
-	} else {
-	    PQNode *head_hold = pq->head; 
-	    PQNode *curr = pq->head;
-	    PQNode *curr_next = pq->head->next;
-	    added = FALSE;
-	    while (curr != NULL && added == FALSE) {
-	        // case: same key, so just need to update the value
-	        if(curr->node.key == new->node.key) {
-	            curr->node.value = new->node.value;
-	            added = TRUE;
-	        } 
-	        
-	        else if(head_hold->node.key < new->node.key) { // case: higher priority than the head
-	            new->next = head_hold;
-	            pq->head = new;
-	            added = TRUE;
-	        } else if (curr_next != NULL && curr_next->node.key < new->node.key) { // case: insert somewhere in the middle
-	            curr->next = new;
-	            new->next = curr_next;
-	            added = TRUE;
-	        } else if( curr == pq->tail && curr->node.key > new->node.key) { // case: insert at tail
-	            curr->next = new;
-	            new->next = NULL;
-	            pq->tail = new;
-	            added = TRUE;
-	        }   
-	        curr = curr->next;
-	                                        // looping conditions 
-	    }
-	    if(curr == pq->tail && added == FALSE){
-	        pq->tail->next = new;
-	        pq->tail = new;
-	   }
-	}
-	*/
-	
-
 }
+
+// Removes and returns the item (ItemPQ) with smallest 'value'.
+// For items with equal 'value', observes FIFO.
 
 ItemPQ dequeuePQ(PQ pq) {
 
     assert (pq != NULL);
     assert (PQEmpty(pq) != 1);
-
-    //if only one node in queue
     
-    //if more than one node in queue
-        //while loop to find smallest value and key
-        
-    //outside while loop store node to remove in a temp
-    //removal when head
-    //removal when tail
-    //removal when middle
     PQNode *itemFound = malloc(sizeof(PQNode));
     itemFound->node.value = 0;
     itemFound->node.key = 0;
     
     ItemPQ itemFoundNode;
-    itemFoundNode.value = 8;                        // used these values to test in output
-    itemFoundNode.key = 8;                          // 
-    
+   
+   // case: only one node in the queue
     if(pq->head != NULL && pq->head == pq->tail) {
         itemFoundNode.value = pq->head->node.value;    
         itemFoundNode.key = pq->head->node.key;         
@@ -156,15 +108,17 @@ ItemPQ dequeuePQ(PQ pq) {
 	    pq->head = pq->tail = NULL;
 	    return itemFoundNode;
     } else {
-        int smallest_v = INF;
+        // case: more than one node in the queue
+        // loop through to find the smallest value and key
+        int smallestValue = INF;
 	    PQNode *curr = pq->head;
 	    PQNode *prev = pq->head;
-	    PQNode *itemFound_prev = NULL;
+	    PQNode *itemFoundPrev = NULL;
         while (curr != NULL) {
-            if (curr->node.value < smallest_v) {
+            if (curr->node.value < smallestValue) {
                 itemFound = curr;
-                itemFound_prev = prev;
-                smallest_v = curr->node.value;          
+                itemFoundPrev = prev;
+                smallestValue = curr->node.value;          
                 
             }
             prev = curr;
@@ -179,13 +133,13 @@ ItemPQ dequeuePQ(PQ pq) {
             free(itemFound);
         //item found is tail
         } else if (itemFound == pq->tail) {
-            pq->tail = itemFound_prev;
+            pq->tail = itemFoundPrev;
             pq->tail->next = NULL;
             free(itemFound); 
         //item in middle
         } else {
             PQNode *temp = itemFound;
-            itemFound_prev->next = itemFound->next;
+            itemFoundPrev->next = itemFound->next;
             free(temp);
        }          
     }      
@@ -193,6 +147,8 @@ ItemPQ dequeuePQ(PQ pq) {
 
 }
 
+// Updates item with a given 'key' value, by updating that item's value to the given 'value'.
+// If item with 'key' does not exist in the queue, no action is taken
 
 void updatePQ(PQ pq, ItemPQ element) {
     
@@ -238,4 +194,5 @@ void  freePQ(PQ pq) {
     free(pq);
 
 }
+
 
