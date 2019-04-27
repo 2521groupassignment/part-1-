@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include "Graph.h"
 
+// Auxillary functions
+static double shortPathDistance (Graph g, Vertex v); 
+static double numReachable (Graph G, Vertex v);
+
 int countInAdjVs(Graph g, Vertex v) 
 {
     double i = 0;
@@ -88,36 +92,63 @@ NodeValues degreeCentrality(Graph g) {
 }
 
 NodeValues closenessCentrality(Graph g){
-    /*assert(g != NULL);
-	NodeValues *new = malloc(sizeof(NodeValues));
-	new->noNodes = numVerticies(g);
-	new->values = malloc(numVerticies(g) * sizeof(double));
-	
-	
-	// this initialises all of the values to 0
-	// in the case that the node has no reachable edges, the value (closeness
-	// centrality) will stay at 0
-	for(int i = 0; i < numVerticies(g); i++){
-        new->values[i] = 0;
-    }
-    
+
+    assert(g != NULL);
+
+    NodeValues GraphCloseness = {0};
+       
+    int nV = numVerticies(g);
+	GraphCloseness.noNodes = nV;
+	GraphCloseness.values = calloc(nV,sizeof(double));
+	    
     Vertex v;
     double num_reach;
     
     // for each of the nodes in the graph need to perform the Wasserman & Faust
     // equation
     
-    for( v = 0; v < numVerticies(g); v++){
-        num_reach = // add in function here to find nodes reachable 
+    for( v = 0; v < nV; v++){
+    
+        num_reach = numReachable(g,v);
         double numerator = (num_reach - 1) * (num_reach - 1);
-        double denominator = (numVerticies(g)-1)*(//find variable for the dist. total);
-        new->values[v] = numerator / denominator;
+        double denominator = (numVerticies(g)-1)*( shortPathDistance(g, v));
+        GraphCloseness.values[v] = (numerator / denominator);
+        
+        if(num_reach == 0) {
+            GraphCloseness.values[v] = 0;
+        }
     }
 	
-	return *new;*/
-	NodeValues throwAway = {0};
-	return throwAway;
+    return GraphCloseness;
+	
+}
 
+static double shortPathDistance(Graph g, Vertex v){
+
+    double shortDistance = 0;
+    
+    ShortestPaths path;
+    path = dijkstra(g, v);
+    for(Vertex i = 0; i < numVerticies(g); i++){
+        shortDistance += path.dist[i];
+    }
+   
+   return shortDistance; 
+    
+}
+
+static double numReachable (Graph g, Vertex v){
+    ShortestPaths path = dijkstra(g, v);
+    double n_reachable = 0;
+    
+    for( int i = 0; i < numVerticies(g); i++){
+        if(path.dist[i] != 0){
+            n_reachable++;
+        }
+    }
+    
+    return n_reachable;
+    
 }
 
 NodeValues betweennessCentrality(Graph g){
