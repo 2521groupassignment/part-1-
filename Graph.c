@@ -193,21 +193,34 @@ void  showGraph(Graph g){
 void  freeGraph(Graph g){
 
     assert(g != NULL);
-    int i = 0;
-    AdjList curr = g->edges[i]->next;
-    AdjList prev = g->edges[i];
-    while (i < g->nV) {
-        while (curr != NULL) {
-            AdjList temp = prev;
-            prev = curr;
-            curr = curr->next;
-            free(temp);        
-        }
-        i++;    
-    }
+    int counter = 0;
+    
+    while (counter < g->nV) {
+    
+        AdjList currEdges = g->edges[counter];
+        AdjList currInEdges = g->inedges[counter];
         
-    free(g->edges);
-    free(g->inedges);   
+        AdjList prevEdges = currEdges;
+        AdjList prevInEdges = currInEdges;
+        
+        while (currEdges != NULL) {
+        
+            prevEdges = currEdges;
+            currEdges = currEdges->next;        
+            free(prevEdges);
+        
+        }    
+                
+        while (currInEdges != NULL) {
+        
+            prevInEdges = currInEdges;
+            currInEdges = currInEdges->next;        
+            free(prevInEdges);
+        
+        }    
+        counter++;
+    }    
+        
     free(g);
         
 }
