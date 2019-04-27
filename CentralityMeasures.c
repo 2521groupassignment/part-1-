@@ -1,4 +1,8 @@
+
 // Graph ADT interface for Ass2 (COMP2521)
+// Part 3 of Assignment 2
+// Jing Jing Fan and Sarah Williams
+
 #include "CentralityMeasures.h"
 #include "Dijkstra.h"
 #include "PQ.h"
@@ -6,10 +10,16 @@
 #include <stdio.h>
 #include "Graph.h"
 
+// auxillary functions
 static double shortPathDistanceSum(Graph g, Vertex v); 
 static double numReachable(Graph G, Vertex v);
+static double count_path(ShortestPaths p, Vertex s, Vertex t);
+static double count_vpath(ShortestPaths p, Vertex s, Vertex t, Vertex v);
+static int countInAdjVs(Graph g, Vertex v);
+static int countOutAdjVs(Graph g, Vertex v);
 
-double count_path(ShortestPaths p, Vertex s, Vertex t) {
+// private function that counts the number of paths from vertex s to t
+static double count_path(ShortestPaths p, Vertex s, Vertex t) {
     if (s == t) {
         return 1.0;
     }
@@ -23,7 +33,7 @@ double count_path(ShortestPaths p, Vertex s, Vertex t) {
     return count;
 }
 
-double count_vpath(ShortestPaths p, Vertex s, Vertex t, Vertex v) {
+static double count_vpath(ShortestPaths p, Vertex s, Vertex t, Vertex v) {
 
     if (s == t) return 0.0;
 
@@ -38,21 +48,22 @@ double count_vpath(ShortestPaths p, Vertex s, Vertex t, Vertex v) {
     return count;
 }
 
-int countInAdjVs(Graph g, Vertex v) 
-{
+// private function that returns the number of nodes directed towards vertex v
+static int countInAdjVs(Graph g, Vertex v) {
+
     double i = 0.0;
     AdjList curr = inIncident(g, v);
     while (curr != NULL) {
         i++;
         curr = curr->next;
     }
-    //printf("hello %f\n", i);
-    
+   
     return i;
 
 }
 
-int countOutAdjVs(Graph g, Vertex v) {
+// private function that returns the number of edges directed outwards from vertex v
+static int countOutAdjVs(Graph g, Vertex v) {
 
     double i = 0.0;
     AdjList curr = outIncident(g, v);
@@ -61,12 +72,13 @@ int countOutAdjVs(Graph g, Vertex v) {
         curr = curr->next;
     }
     
-    //printf("hello %d\n", i);
     return i;
 
 }
 
+// calculates the number of nodes directed out from the vertex 
 NodeValues outDegreeCentrality(Graph g){
+
 	NodeValues GraphOutDegrees = {0};
 	int nV = numVerticies(g);
    
@@ -83,6 +95,8 @@ NodeValues outDegreeCentrality(Graph g){
     
     return GraphOutDegrees;
 }
+
+// calculates the number of nodes directed towards the vertex 
 NodeValues inDegreeCentrality(Graph g){
 	NodeValues GraphInDegrees = {0};
 	int nV = numVerticies(g);
@@ -101,7 +115,11 @@ NodeValues inDegreeCentrality(Graph g){
     return GraphInDegrees;
 
 }
+
+// calculate the degree centrality of each vertex in a graph, this is the 
+// sum of nodes directed towards and from each vertex
 NodeValues degreeCentrality(Graph g) {
+
     NodeValues GraphDegrees = {0};
    
     int nV = numVerticies(g);
@@ -119,9 +137,9 @@ NodeValues degreeCentrality(Graph g) {
 
 }
 
+// calculates the centrality of a vertex, dependent upon its distance to 
+// all other vertices in the graph 
 NodeValues closenessCentrality(Graph g){
-
-    //assert(g != NULL);
 
     NodeValues GraphCloseness;
        
@@ -141,17 +159,14 @@ NodeValues closenessCentrality(Graph g){
 
         double numerator = (numReach - 1) * (numReach - 1);
         double denominator = ((nV)-1)*(shortPathDistanceSum(g, v));
-	    //printf("v%d n%f N%d dist%f\n", v, numReach, nV, shortPathDistanceSum(g, v));
-
+	 
         if (denominator == 0) {
             GraphCloseness.values[v] = 0;
         } else {
-        
     	    GraphCloseness.values[v] = numerator/denominator;
         
         }
-       
-        //printf("v = %d, n = %f, N = %d, numerator = %f, denominator = %f\n", v, numReach, nV);
+
     }
 	
 	return GraphCloseness;
@@ -187,13 +202,15 @@ static double numReachable (Graph g, Vertex v){
             nReachable++;
         }
     }
-    //printf("hello%f\n", nReachable);
+
     return nReachable;
     
 }
 
-
+// calculates the centrality of a vertex, dependent upon the number of shortest
+// paths between two nodes
 NodeValues betweennessCentrality(Graph g){
+
 	int s, t, v;
 	int nV = numVerticies(g);
     NodeValues betweenness;
@@ -235,6 +252,7 @@ NodeValues betweennessCentralityNormalised(Graph g){
 	            
 
 }
+
 
 void showNodeValues(NodeValues values){
     if (values.values == NULL) {
