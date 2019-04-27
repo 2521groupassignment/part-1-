@@ -1,3 +1,4 @@
+//kENNEDY
 // PQ ADT interface for Ass2 (COMP2521)
 #include "PQ.h"
 #include <stdlib.h>
@@ -20,7 +21,7 @@ typedef struct PQRep {
 
     PQNode *head;
     PQNode *tail;
-
+    
 }PQRep;
 
 // make a new priority queue
@@ -54,7 +55,32 @@ void addPQ(PQ pq, ItemPQ element) {
 	new->node.key = element.key;
 	new->node.value = element.value;
 	new->next = NULL;
-	int added = FALSE;
+	
+	
+	PQNode *curr = pq->head;
+	int changed = 0;
+	while (curr != NULL) {
+	
+	    if (curr->node.key == element.key) {
+	    
+	        curr->node.value = element.value;
+	        changed = 1;
+	        
+	    }
+	    curr=curr->next;
+	}
+	
+	if (changed == 1) return;
+	
+	if (pq->head == NULL) {
+        pq->head = new;
+        pq->tail = new;
+	} else {
+        new->next = pq->head;
+        pq->head = new;
+    }    
+
+	/*int added = FALSE;
 	
 	//adding to empty PQ	
 	if (pq->head == NULL) {
@@ -78,7 +104,7 @@ void addPQ(PQ pq, ItemPQ element) {
 	            new->next = head_hold;
 	            pq->head = new;
 	            added = TRUE;
-	        } else if (curr_next->node.key < new->node.key) { // case: insert somewhere in the middle
+	        } else if (curr_next != NULL && curr_next->node.key < new->node.key) { // case: insert somewhere in the middle
 	            curr->next = new;
 	            new->next = curr_next;
 	            added = TRUE;
@@ -96,6 +122,7 @@ void addPQ(PQ pq, ItemPQ element) {
 	        pq->tail = new;
 	   }
 	}
+	*/
 	
 
 }
