@@ -1,7 +1,7 @@
 // Graph.c 
 // Part 1 of assignment 2
 // implement all of the functions in Graph.h
-// Sarah Williams and Jing Jing Fan
+// Jing Jing Fan and Sarah Williams
 
 // use of adjacency list representation 
 
@@ -26,13 +26,13 @@ typedef struct GraphRep {
 // Auxillary functions:
 
 // makeNode
-static AdjList makeNode (Vertex n, int weight);
+static AdjList makeNode (Vertex v, int weight);
 // inAl
-static bool inAL(AdjList aList, Vertex vert);
+static bool inAL(AdjList L, Vertex v);
 // showAL
 static void showAL(AdjList L);
 // maybe make a valid checker for edges
-static bool validV(Graph g, Vertex V);
+static bool validV(Graph g, Vertex v);
 
 
 // create a new graph
@@ -50,7 +50,9 @@ Graph newGraph(int noNodes)
     // allocate memory for the array of lists
     
     newGraph->edges = malloc(noNodes * sizeof(AdjList)); 
+    assert(newGraph->edges != NULL);
     newGraph->inedges = malloc(noNodes * sizeof(AdjList));
+    assert(newGraph->inedges != NULL);
     
     // initialise the values in the lists
     for(i = 0; i < noNodes; i++){
@@ -236,11 +238,11 @@ static bool validV(Graph g, Vertex v){
 
 
 // function to make new nodes
-static AdjList makeNode (Vertex n, int weight) { 
+static AdjList makeNode (Vertex v, int weight) { 
 
     AdjList new = malloc(sizeof(adjListNode)); 
     assert(new != NULL);
-    new->w = n;
+    new->w = v;
     new->weight = weight;
     new->next = NULL;
     return new;
@@ -250,13 +252,13 @@ static AdjList makeNode (Vertex n, int weight) {
 
 // checks if a node is already in the edge list
 // i.e. if there is already an edge between two nodes
-static bool inAL(AdjList aList, Vertex vert) {
+static bool inAL(AdjList L, Vertex v) {
 
-    AdjList curr = aList;
+    AdjList curr = L;
     int inAL = false;
 
     while (curr != NULL) {
-        if (vert == curr->w) {
+        if (v == curr->w) {
             inAL = true;
             break;
         }
