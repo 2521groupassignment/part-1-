@@ -36,9 +36,13 @@ static double countPath(ShortestPaths path, Vertex v, Vertex w) {
 
 static double countVPath(ShortestPaths path, Vertex s, Vertex t, Vertex v) {
 
-    if (s == t) return 0.0;
+    if (s == t) {
+        return 0.0;
+    }
 
-    if (t == v) return countPath(path, s, v); 
+    if (v == t) {
+        return countPath(path, s, v); 
+    }
 
     double count = 0.0;
     PredNode *pred = path.pred[t];
