@@ -37,6 +37,9 @@ PQ newPQ() {
 
 // check whether the queue is empty
 int PQEmpty(PQ p) { 
+
+    assert(p != NULL);
+    
 	if (p->head == NULL){
 	    return 1;
 	} 
@@ -170,12 +173,16 @@ void  showPQ(PQ pq) {
     
     assert(pq != NULL);  
     
-    PQNode *curr;
-    for(curr = pq->head; curr != NULL; curr = curr->next){
-        printf("{%d,%d}", curr->node.key, curr->node.value);
-        if(curr->next != NULL) {
-            printf(" - ");
-        }
+    if(PQEmpty(pq) == 1) {
+        printf("\n");
+    } else {
+        PQNode *curr;
+        for(curr = pq->head; curr != NULL; curr = curr->next){
+            printf("{%d,%d}", curr->node.key, curr->node.value);
+            if(curr->next != NULL) {
+               printf(" - ");
+            }
+         }
     }
     
 }
@@ -195,4 +202,4 @@ void  freePQ(PQ pq) {
 
 }
 
-
+ 
