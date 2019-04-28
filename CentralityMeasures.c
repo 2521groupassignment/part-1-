@@ -13,35 +13,44 @@
 // auxillary functions
 static double shortPathDistanceSum(Graph g, Vertex v); 
 static double numReachable(Graph G, Vertex v);
-static double countPath(ShortestPaths path, Vertex v, Vertex w);
+static double countPath(ShortestPaths path, Vertex s, Vertex t);
 static double countVPath(ShortestPaths path, Vertex s, Vertex t, Vertex v);
 static int countInAdjVs(Graph g, Vertex v);
 static int countOutAdjVs(Graph g, Vertex v);
 
-// private function that counts the number of paths from vertex s to t
-static double countPath(ShortestPaths path, Vertex v, Vertex w) {
+// counts shortest paths from s to t
+static double countPath(ShortestPaths path, Vertex s, Vertex t) {
 
-    if (v == w) {
+    // counts a path when recursion reaches the source
+    if (s == t) {
         return 1.0;
     }
 
     double count = 0.0;
-    PredNode *pred = path.pred[w];
+    PredNode *pred = path.pred[t];
+    //keeps iterating through the pred of the pred and etc.
     while (pred) {
-        count += countPath(path, v, pred->v);
+        count += countPath(path, s, pred->v);
         pred = pred->next;
     }
     return count;
 }
 
+// counts shortest paths from s to t passing through v
 static double countVPath(ShortestPaths path, Vertex s, Vertex t, Vertex v) {
 
-    if (s == t) return 0.0;
+    if (s == t) {
+        return 0.0;
+    }
 
-    if (t == v) return countPath(path, s, v); 
+    //if v is in the path, count the path
+    if (v == t) {
+        return countPath(path, s, v); 
+    }
 
     double count = 0.0;
     PredNode *pred = path.pred[t];
+    //keeps iterating through the pred of the pred and etc.
     while (pred) {
         count += countVPath(path, s, pred->v, v);
         pred = pred->next;
@@ -49,7 +58,7 @@ static double countVPath(ShortestPaths path, Vertex s, Vertex t, Vertex v) {
     return count;
 }
 
-// private function that returns the number of nodes directed towards vertex v
+// counts number of nodes connected to v through in edges
 static int countInAdjVs(Graph g, Vertex v) {
 
     double i = 0.0;
@@ -63,7 +72,7 @@ static int countInAdjVs(Graph g, Vertex v) {
 
 }
 
-// private function that returns the number of edges directed outwards from vertex v
+// counts number of nodes connected to v through out edges
 static int countOutAdjVs(Graph g, Vertex v) {
 
     double i = 0.0;
@@ -91,6 +100,7 @@ NodeValues outDegreeCentrality(Graph g){
     Vertex v;
     v = 0;
     while (v < nV) {
+        //store results of individual v into an array
         GraphOutDegrees.values[v] = countOutAdjVs(g, v);
         v++;
     }
@@ -111,6 +121,7 @@ NodeValues inDegreeCentrality(Graph g){
     Vertex v;
     v = 0;
     while (v < nV) {
+        //store results of individual v into an array
         GraphInDegrees.values[v] = countInAdjVs(g, v);
         v++;
     }
@@ -134,6 +145,7 @@ NodeValues degreeCentrality(Graph g) {
     Vertex v;
     v = 0;
     while (v < nV) {
+        //store results of individual v into an array
         GraphDegrees.values[v] = countOutAdjVs(g, v) + countInAdjVs(g, v);
         v++;
     }
@@ -179,8 +191,7 @@ NodeValues closenessCentrality(Graph g){
 	
 }
 
-// private function that finds the sum of the distances from vertex v to 
-// all other reachable nodes
+//finds the sum of shortest path weight from v to all other nodes
 static double shortPathDistanceSum(Graph g, Vertex v){
 
     double shortDistance = 0.0;
@@ -190,6 +201,7 @@ static double shortPathDistanceSum(Graph g, Vertex v){
     path = dijkstra(g, v);
     
     for(int i = 0; i < nV; i++){
+        // summming all the shortest dists of v
         shortDistance = shortDistance + path.dist[i];
     }
    
@@ -197,7 +209,7 @@ static double shortPathDistanceSum(Graph g, Vertex v){
     
 }
 
-// private function that finds the number of nodes reachable from the vertex v
+// find how many reachable nodes from v including v
 static double numReachable (Graph g, Vertex v){
 
     ShortestPaths path = dijkstra(g, v);
@@ -206,6 +218,7 @@ static double numReachable (Graph g, Vertex v){
     int nV = numVerticies(g);
     
     for( int i = 0; i < nV; i++){
+        // if dist is not 0 then it is reachable
         if(path.dist[i] != 0){
             nReachable++;
         }
@@ -226,14 +239,18 @@ NodeValues betweennessCentrality(Graph g){
 	betweenness.values =  calloc(nV,sizeof(double));
 	assert(betweenness.values != NULL);
 	
+	//loop source vertex
 	for (s = 0; s < nV; s++) {
+	    //loop destination vertex
 	    for (t = 0; t < nV; t++) {
+	        //loop vertex that is potentially between s and t
 	        for (v = 0; v < nV; v++) {
 	            if (v != s && v != t) {
 	            
 	                ShortestPaths path = dijkstra(g, s);
 	                double countp = countPath(path, s, t);
 	                double count_vp = countVPath(path, s, t, v);
+	                // store betweeness result of each v into an array
 	                if (countp != 0) betweenness.values[v] += count_vp/countp;
 	            
 	            }
@@ -273,10 +290,9 @@ void showNodeValues(NodeValues values){
 		printf("Invalid Values\n");
 		return;
 	}
-	Vertex v = 0;;
-	while (v < values.noNodes) {
+	Vertex v;
+	for (v = 0; v < values.noNodes; v++) {
 	    printf("%d: %f\n", v, values.values[v]);
-        v++;
     }
 
 }
