@@ -252,6 +252,7 @@ static AdjList makeNode (Vertex v, int weight) {
 
 // checks if a node is already in the edge list
 // i.e. if there is already an edge between two nodes
+// adapted from the week 4 exercises, from the file list.c 
 static bool inAL(AdjList L, Vertex v) {
 
     AdjList curr = L;
@@ -270,6 +271,7 @@ static bool inAL(AdjList L, Vertex v) {
 
 // displays the destination nodes from a given source vertex
 // used in the showGraph function
+// adapted from the week 4 exercises, from the file list.c 
 static void showAL(AdjList L) {
     if(L == NULL) 
         printf("\n");
