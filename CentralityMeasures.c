@@ -1,4 +1,3 @@
-
 // Graph ADT interface for Ass2 (COMP2521)
 // Part 3 of Assignment 2
 // Jing Jing Fan and Sarah Williams
@@ -8,41 +7,43 @@
 #include "PQ.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "Graph.h"
 
 // auxillary functions
 static double shortPathDistanceSum(Graph g, Vertex v); 
 static double numReachable(Graph G, Vertex v);
-static double count_path(ShortestPaths p, Vertex s, Vertex t);
-static double count_vpath(ShortestPaths p, Vertex s, Vertex t, Vertex v);
+static double countPath(ShortestPaths path, Vertex v, Vertex w);
+static double countVPath(ShortestPaths path, Vertex s, Vertex t, Vertex v);
 static int countInAdjVs(Graph g, Vertex v);
 static int countOutAdjVs(Graph g, Vertex v);
 
 // private function that counts the number of paths from vertex s to t
-static double count_path(ShortestPaths p, Vertex s, Vertex t) {
-    if (s == t) {
+static double countPath(ShortestPaths path, Vertex v, Vertex w) {
+
+    if (v == w) {
         return 1.0;
     }
 
     double count = 0.0;
-    PredNode *pred = p.pred[t];
+    PredNode *pred = path.pred[w];
     while (pred) {
-        count += count_path(p, s, pred->v);
+        count += countPath(path, v, pred->v);
         pred = pred->next;
     }
     return count;
 }
 
-static double count_vpath(ShortestPaths p, Vertex s, Vertex t, Vertex v) {
+static double countVPath(ShortestPaths path, Vertex s, Vertex t, Vertex v) {
 
     if (s == t) return 0.0;
 
-    if (t == v) return count_path(p, s, v); 
+    if (t == v) return countPath(path, s, v); 
 
     double count = 0.0;
-    PredNode *pred = p.pred[t];
+    PredNode *pred = path.pred[t];
     while (pred) {
-        count += count_vpath(p, s, pred->v, v);
+        count += countVPath(path, s, pred->v, v);
         pred = pred->next;
     }
     return count;
@@ -85,6 +86,7 @@ NodeValues outDegreeCentrality(Graph g){
     GraphOutDegrees.noNodes = nV;
     
     GraphOutDegrees.values = calloc(nV, sizeof(double));
+    assert(GraphOutDegrees.values != NULL);
     
     Vertex v;
     v = 0;
@@ -98,11 +100,13 @@ NodeValues outDegreeCentrality(Graph g){
 
 // calculates the number of nodes directed towards the vertex 
 NodeValues inDegreeCentrality(Graph g){
+
 	NodeValues GraphInDegrees = {0};
 	int nV = numVerticies(g);
    
     GraphInDegrees.noNodes = nV;
     GraphInDegrees.values = calloc(nV, sizeof(double));
+    assert(GraphInDegrees.values != NULL);
     
     Vertex v;
     v = 0;
@@ -121,10 +125,11 @@ NodeValues inDegreeCentrality(Graph g){
 NodeValues degreeCentrality(Graph g) {
 
     NodeValues GraphDegrees = {0};
-   
     int nV = numVerticies(g);
+    
     GraphDegrees.noNodes = nV;
     GraphDegrees.values = calloc(nV, sizeof(double));
+    assert(GraphDegrees.values != NULL);
     
     Vertex v;
     v = 0;
@@ -141,11 +146,12 @@ NodeValues degreeCentrality(Graph g) {
 // all other vertices in the graph 
 NodeValues closenessCentrality(Graph g){
 
-    NodeValues GraphCloseness;
-       
+    NodeValues GraphCloseness; 
     int nV = numVerticies(g);
+    
 	GraphCloseness.noNodes = nV;
 	GraphCloseness.values = calloc(nV, sizeof(double));
+	assert(GraphCloseness.values != NULL);
 	    
     Vertex v;
     double numReach;
@@ -177,7 +183,7 @@ NodeValues closenessCentrality(Graph g){
 // all other reachable nodes
 static double shortPathDistanceSum(Graph g, Vertex v){
 
-    double shortDistance = 0;
+    double shortDistance = 0.0;
     int nV = numVerticies(g);
     
     ShortestPaths path;
@@ -195,9 +201,11 @@ static double shortPathDistanceSum(Graph g, Vertex v){
 static double numReachable (Graph g, Vertex v){
 
     ShortestPaths path = dijkstra(g, v);
-    double nReachable = 1; //include self
+    double nReachable = 1.0; //include self
     
-    for( int i = 0; i < numVerticies(g); i++){
+    int nV = numVerticies(g);
+    
+    for( int i = 0; i < nV; i++){
         if(path.dist[i] != 0){
             nReachable++;
         }
@@ -216,14 +224,16 @@ NodeValues betweennessCentrality(Graph g){
     NodeValues betweenness;
 	betweenness.noNodes = nV;
 	betweenness.values =  calloc(nV,sizeof(double));
+	assert(betweenness.values != NULL);
+	
 	for (s = 0; s < nV; s++) {
 	    for (t = 0; t < nV; t++) {
 	        for (v = 0; v < nV; v++) {
 	            if (v != s && v != t) {
 	            
-	                ShortestPaths shortest_p = dijkstra(g, s);
-	                double countp = count_path(shortest_p, s, t);
-	                double count_vp = count_vpath(shortest_p, s, t, v);
+	                ShortestPaths path = dijkstra(g, s);
+	                double countp = countPath(path, s, t);
+	                double count_vp = countVPath(path, s, t, v);
 	                if (countp != 0) betweenness.values[v] += count_vp/countp;
 	            
 	            }
@@ -235,26 +245,30 @@ NodeValues betweennessCentrality(Graph g){
 }
 
 NodeValues betweennessCentralityNormalised(Graph g){
+
     NodeValues betweenness = betweennessCentrality(g);
+    
 	double nV = numVerticies(g);
-    NodeValues normalised_betweenness;
-	normalised_betweenness.noNodes = nV;
-	normalised_betweenness.values =  calloc(nV,sizeof(double));
+    NodeValues normalisedBetweenness;
+	normalisedBetweenness.noNodes = nV;
+	normalisedBetweenness.values =  calloc(nV,sizeof(double));
+	assert(normalisedBetweenness.values != NULL);
 		       
     int i = 0;
     while (i < nV) {
     
-        normalised_betweenness.values[i] = betweenness.values[i]/((nV-1)*(nV-2));
+        normalisedBetweenness.values[i] = betweenness.values[i]/((nV-1)*(nV-2));
         i++;
     
     }     
-	return normalised_betweenness;
+	return normalisedBetweenness;
 	            
 
 }
 
 
 void showNodeValues(NodeValues values){
+
     if (values.values == NULL) {
 		printf("Invalid Values\n");
 		return;
