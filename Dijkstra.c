@@ -19,6 +19,7 @@
 static void addPredMultiple(ShortestPaths *path, Vertex w, Vertex v);
 static void addPred(ShortestPaths *path, Vertex w, Vertex v);
 static int lessEqual (ShortestPaths *path, ItemPQ node, int weight, Vertex w);
+static void setZero(ShortestPaths *path, Graph g);
 
 /* Finds shortest paths from a given vertex to all other vertices, as discussed in the lectures.
  * Returns 'ShortestPaths' structure with the required information
@@ -122,13 +123,7 @@ ShortestPaths dijkstra(Graph g, Vertex v) {
                 
     // case: distances to some nodes are still set to inf
     // need to make them equal to 0
-    int k;
-    for(k = 0; k < numVerticies(g); k++){
-        if(shortP->dist[k] == INF) {
-        shortP->dist[k] = 0;
-        }
-    }
-
+    setZero(shortP, g);
 
     return *shortP;
 }
@@ -206,5 +201,20 @@ static int lessEqual (ShortestPaths *path, ItemPQ node, int weight, Vertex w){
     }
     
     return 0;
+    
+}
+
+// private function that traverses through the path, and if any nodes has not
+// been reached and hence their distance is still set to infinity, changes
+// the distance to 0
+static void setZero(ShortestPaths *path, Graph g){
+    
+    int k;
+    for(k = 0; k < numVerticies(g); k++){
+        if(path->dist[k] == INF) {
+        path->dist[k] = 0;
+        }
+    }
+
     
 }
