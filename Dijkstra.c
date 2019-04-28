@@ -1,4 +1,4 @@
- // Dijkstra ADT interface for Ass2 (COMP2521)
+// Dijkstra ADT interface for Ass2 (COMP2521)
 // Part 2 of Assignment 2
 // Jing Jing Fan and Sarah Williams
 
@@ -41,9 +41,9 @@ ShortestPaths dijkstra(Graph g, Vertex v) {
     shortP->pred = malloc(numVerticies(g) * sizeof(PredNode *));
     assert(shortP->pred != NULL);
     
-    
     // initialise an array to hold the nodes that have been visited in the graph
     int *seenSet = malloc(sizeof(int)*numVerticies(g));
+    assert(seenSet != NULL);
     
     // assign the necessary values to the variables in the arrays
     for( int i = 0; i < numVerticies(g); i++) {
@@ -169,6 +169,7 @@ void  freeShortestPaths(ShortestPaths paths) {
 static void addPredMultiple(ShortestPaths *path, Vertex w, Vertex v){
 
     PredNode *new = malloc(sizeof(PredNode));
+    assert(new != NULL);
     new->v = v;
     new->next = NULL;
 
@@ -187,6 +188,7 @@ static void addPredMultiple(ShortestPaths *path, Vertex w, Vertex v){
 static void addPred(ShortestPaths *path, Vertex w, Vertex v){
 
     path->pred[w] = malloc(sizeof(PredNode));
+    assert(path->pred[w] != NULL);
     path->pred[w]->v = v;
     path->pred[w]->next = NULL;
     
